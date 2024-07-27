@@ -25,7 +25,7 @@ public class HelloWorld implements RequestHandler<Object, Map<String, Object>> {
     public Map<String, Object> handleRequest(Object request, Context context) {
         HashMap<String, Object> input = (HashMap<String, Object>) request;
         Map<String, Object> requestContext = (((Map<String, Map<String, Object>>)request).get("requestContext"));
-        Map<String, Object> http = (((Map<String, Map<String, Object>>)request).get("http"));
+        Map<String, Object> http = (Map<String, Object>)requestContext.get("http");
         String method = http.get("method").toString();
         String rawPath = input.get("rawPath").toString();
         Map<String, Object> resultMap = new HashMap<String, Object>();

@@ -32,7 +32,7 @@ public class HelloWorld implements RequestHandler<Object, Map<String, Object>> {
         String message = "Bad request syntax or unsupported method. Request path: " + rawPath+ " . HTTP method: " +method;
         if ("/hello".equals(rawPath)) {
             resultMap.put("statusCode", 200);
-            resultMap.put("body", "{ \"statusCode\":200,\"message\": \"Hello, world!\" }");
+            resultMap.put("body", "{ \"statusCode\":200,\"message\": \"Hello from Lambda\" }");
             return resultMap;
         }
         resultMap.put("statusCode", 400);

@@ -28,14 +28,14 @@ public class HelloWorld implements RequestHandler<Object, Map<String, Object>> {
 		String method = http.get("method").toString();
 		String rawPath = input.get("rawPath").toString();
 		Map<String, Object> resultMap = new HashMap<String, Object>();
-		String message = "Bad request syntax or unsupported method. Request path: " + rawPath + " . HTTP method: " + method;
+		String message = "Bad request syntax or unsupported method. Request path: " + rawPath + ". HTTP method: " + method;
 		if ("/hello".equals(rawPath)) {
 			resultMap.put("statusCode", 200);
-			resultMap.put("body", "{ \"statusCode\":200,\"message\": \"Hello from Lambda\" }");
+			resultMap.put("body", "{\"statusCode\": 200,\"message\": \"Hello from Lambda\"}");
 			return resultMap;
 		}
 		resultMap.put("statusCode", 400);
-		resultMap.put("body", "{ \"statusCode\":400,\"message\": \"" + message + "\" }");
+		resultMap.put("body", "{\"statusCode\": 400, \"message\": \"" + message + "\"}");
 		return resultMap;
 	}
 }

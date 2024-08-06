@@ -18,10 +18,6 @@
     "env_variables" : { },
     "publish_version" : false,
     "logs_expiration" : "${logs_expiration}",
-    "snap_start" : "None",
-    "url_config" : {
-      "auth_type" : "NONE",
-      "invoke_mode" : "BUFFERED"
-    }
+    "snap_start" : "None"
   }
 }

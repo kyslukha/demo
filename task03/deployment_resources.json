@@ -32,7 +32,7 @@
     ],
     "resource_type": "iam_role"
   },
-  "task03-api": {
+  "task3-api": {
     "resource_type": "api_gateway",
     "deploy_stage": "api",
     "dependencies": [],

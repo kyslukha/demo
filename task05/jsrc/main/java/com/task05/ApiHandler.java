@@ -58,7 +58,7 @@ public class ApiHandler implements RequestHandler<APIGatewayProxyRequestEvent, A
 
 
 			Map<String, Object> responseBody = new HashMap<>();
-			responseBody.put("statusCode", 201);
+			responseBody.put("statusCode", "201");
 			responseBody.put("event", eventData);
 
 

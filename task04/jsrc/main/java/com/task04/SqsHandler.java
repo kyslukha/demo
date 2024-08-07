@@ -22,7 +22,7 @@ import java.util.List;
 )
 
 @SqsTriggerEventSource(
-        targetQueue = "async_queue", batchSize = 12)
+        targetQueue = "async_queue", batchSize = 10)
 @DependsOn(
         name = "async_queue",
         resourceType = ResourceType.SQS_QUEUE

@@ -47,7 +47,7 @@
     "event_sources" : [ {
       "resource_type" : "sqs_trigger",
       "target_queue" : "async_queue",
-      "batch_size" : 12,
+      "batch_size" : 10,
       "function_response_types" : [ ]
     } ],
     "env_variables" : { },

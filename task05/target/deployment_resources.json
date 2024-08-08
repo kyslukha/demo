@@ -22,7 +22,9 @@
       "target_table" : "Events",
       "batch_size" : 10
     } ],
-    "env_variables" : { },
+    "env_variables" : {
+      "TABLE_NAME" : "${target_table}"
+    },
     "publish_version" : false,
     "logs_expiration" : "${logs_expiration}",
     "snap_start" : "None"

@@ -33,8 +33,11 @@ public class ApiHandler implements RequestHandler<Map<String, Object>, Map<Strin
             String id = UUID.randomUUID().toString();
             Integer principalId = (Integer) request.get("principalId");
             String createdAt = ISODateTimeFormat.dateTimeNoMillis().toString();
-            Map<String, String> body = (Map<String, String>) request.get("content");
-            Item item = new Item().withPrimaryKey("id", id).withInt("principalId", principalId).withString("createdAt", createdAt).withMap("body", body);
+            Map<String, String> content = (Map<String, String>) request.get("content");
+            Map<String,Map<String,String>> body = new HashMap<>();
+            body.put("content", content);
+            Item item = new Item().withPrimaryKey("id", id).withInt("principalId", principalId)
+                    .withString("createdAt", createdAt).withMap("body", body);
             table.putItem(item);
 
             responseBody.put("statusCode", 201);

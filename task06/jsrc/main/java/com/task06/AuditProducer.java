@@ -41,8 +41,8 @@ public class AuditProducer implements RequestHandler<DynamodbEvent, String> {
     private final String tableName;
 
     public AuditProducer() {
-//        tableName = "cmtr-3ba132da-Configuration" ;
-        tableName = System.getenv("TABLE_NAME");
+//        tableName = "cmtr-3ba132da-Audit" ;
+        tableName = "Audit";
         auditTable = dynamoDB.getTable(tableName);
     }
 
@@ -84,7 +84,7 @@ public class AuditProducer implements RequestHandler<DynamodbEvent, String> {
                 .withPrimaryKey("id", primaryKey)
                 .withString("event", "STORE")
                 .withString("modificationTime", modificationTime)
-                .withString("newItemKey", newImage.get("key").toString())
+                .withString("itemKey", newImage.get("key").toString())
                 .withString("updatedAttribute", change ? "value" : "key")
                 .withString(change ? "oldValue" : "oldKey", change ? oldImage.get("value").toString() : oldImage.get("key").toString())
                 .withString(change ? "newValue" : "newKey", change ? newImage.get("value").toString() : newImage.get("key").toString());
@@ -98,7 +98,7 @@ public class AuditProducer implements RequestHandler<DynamodbEvent, String> {
                 .withPrimaryKey("id", primaryKey)
                 .withString("event", "CREATE")
                 .withString("modificationTime", modificationTime)
-                .withString("newItemKey",  newImage.get("key").toString())
+                .withString("itemKey",  newImage.get("key").toString())
                 .withMap("newValue", newValue);
         auditTable.putItem(auditItem);
     }

@@ -13,6 +13,8 @@ import com.amazonaws.services.lambda.runtime.events.models.dynamodb.AttributeVal
 import com.syndicate.deployment.annotations.environment.EnvironmentVariable;
 import com.syndicate.deployment.annotations.events.DynamoDbTriggerEventSource;
 import com.syndicate.deployment.annotations.lambda.LambdaHandler;
+import com.syndicate.deployment.annotations.resources.DependsOn;
+import com.syndicate.deployment.model.ResourceType;
 import com.syndicate.deployment.model.RetentionSetting;
 
 import java.time.LocalDateTime;
@@ -27,30 +29,33 @@ import java.util.Map;
         logsExpiration = RetentionSetting.SYNDICATE_ALIASES_SPECIFIED
 )
 @DynamoDbTriggerEventSource(targetTable = "Configuration", batchSize = 1)
-
-
-@EnvironmentVariable(key = "TABLE_NAME", value = "${target_table}"
+@EnvironmentVariable(key = "AUDIT_TABLE",
+        value = "${target_table}"
 )
 
 
-public class AuditProducer implements RequestHandler<DynamodbEvent, String> {
+public class AuditProducer implements RequestHandler<DynamodbEvent, Void> {
     private final AmazonDynamoDB client = AmazonDynamoDBClientBuilder.defaultClient();
     private final DynamoDB dynamoDB = new DynamoDB(client);
     private final Table auditTable;
 
-    private final String tableName;
+    private final String AUDIT_TABLE;
 
     public AuditProducer() {
-//        tableName = "cmtr-3ba132da-Audit" ;
-        tableName = "Audit";
-        auditTable = dynamoDB.getTable(tableName);
+        AUDIT_TABLE = System.getenv("AUDIT_TABLE");
+//        tableName = "Audit";
+        auditTable = dynamoDB.getTable(AUDIT_TABLE);
     }
 
     @Override
-    public String handleRequest(DynamodbEvent dynamodbEvent, Context context) {
+    public Void handleRequest(DynamodbEvent dynamodbEvent, Context context) {
+        LambdaLogger logger = context.getLogger();
+        logger.log("tableName" + AUDIT_TABLE);
+        logger.log("context" + context.getFunctionName());
+        logger.log("dynamodbEvent" + dynamodbEvent.toString());
+
         for (DynamodbEvent.DynamodbStreamRecord record : dynamodbEvent.getRecords()) {
-            LambdaLogger logger = context.getLogger();
-            logger.log("tableName" + tableName);
+
 
             if (record == null || record.getDynamodb() == null) {
                 continue;
@@ -64,17 +69,19 @@ public class AuditProducer implements RequestHandler<DynamodbEvent, String> {
 
             String primaryKey = record.getDynamodb().getKeys().get("id").getS();
             String modificationTime = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME);
+            logger.log("event "+ record.getEventName());
 
-            logger.log("newImage " + newMap);
-            logger.log("oldImage " + oldMap);
+            logger.log("newMap " + newMap);
+            logger.log("oldMap " + oldMap);
 
-            if ("CREATE".equals(eventName)) {
+            if ("INSERT".equals(eventName)) {
                 handleCreatedEvent(primaryKey, newMap, modificationTime);
-            } else if ("STORE".equals(eventName)) {
+            } else if ("MODIFY".equals(eventName)) {
                 handleStoredEvent(primaryKey, oldMap, newMap, modificationTime);
             }
         }
-        return "Successfully processed " + dynamodbEvent.getRecords().size() + " records." ;
+//        return "Successfully processed " + dynamodbEvent.getRecords().size() + " records." ;
+        return null;
 
     }
 
@@ -82,7 +89,7 @@ public class AuditProducer implements RequestHandler<DynamodbEvent, String> {
         boolean change = oldImage.get("key").toString().equals(newImage.get("key").toString());
         Item auditItem = new Item()
                 .withPrimaryKey("id", primaryKey)
-                .withString("event", "STORE")
+                .withString("event", "MODIFY")
                 .withString("modificationTime", modificationTime)
                 .withString("itemKey", newImage.get("key").toString())
                 .withString("updatedAttribute", change ? "value" : "key")
@@ -96,7 +103,7 @@ public class AuditProducer implements RequestHandler<DynamodbEvent, String> {
         newValue.put( newImage.get("key").toString(), Integer.valueOf( newImage.get("value").toString()));
         Item auditItem = new Item()
                 .withPrimaryKey("id", primaryKey)
-                .withString("event", "CREATE")
+                .withString("event", "INSERT")
                 .withString("modificationTime", modificationTime)
                 .withString("itemKey",  newImage.get("key").toString())
                 .withMap("newValue", newValue);

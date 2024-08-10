@@ -29,8 +29,8 @@ import java.util.UUID;
 )
 
 @EnvironmentVariables(value = {
-        @EnvironmentVariable(key = "region", value = "${region}"),
-        @EnvironmentVariable(key = "notification_bucket", value = "${notification_bucket}")
+        @EnvironmentVariable(key = "region", value = "eu-central-1"),
+        @EnvironmentVariable(key = "notification_bucket", value = "uuid-storage")
 })
 public class UuidGenerator implements RequestHandler<Object, String> {
 

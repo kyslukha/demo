@@ -8,6 +8,7 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.syndicate.deployment.annotations.environment.EnvironmentVariable;
 import com.syndicate.deployment.annotations.environment.EnvironmentVariables;
+import com.syndicate.deployment.annotations.events.RuleEventSource;
 import com.syndicate.deployment.annotations.lambda.LambdaHandler;
 import com.syndicate.deployment.annotations.resources.DependsOn;
 import com.syndicate.deployment.model.ResourceType;
@@ -34,8 +35,8 @@ import java.util.UUID;
         @EnvironmentVariable(key = "region", value = "eu-central-1"),
         @EnvironmentVariable(key = "notification_bucket", value = "uuid-storage")
 })
-@DependsOn(
-        name = "uuid_trigger", resourceType = ResourceType.CLOUDWATCH_RULE
+@RuleEventSource(
+        targetRule = "uuid_trigger"
 )
 
 public class UuidGenerator implements RequestHandler<Object, String> {

@@ -42,7 +42,7 @@ import static com.amazonaws.util.json.Jackson.getObjectMapper;
 public class UuidGenerator implements RequestHandler<Object, String> {
 
         	private static final String BUCKET_NAME = "uuid-storage";
-//    private static final String BUCKET_NAME = "cmtr-3ba132da-uuid-storage";
+//        	private static final String BUCKET_NAME = "cmtr-3ba132da-uuid-storage";
 
 
     public String handleRequest(Object request, Context context) {

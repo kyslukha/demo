@@ -32,7 +32,7 @@ import static com.amazonaws.util.json.Jackson.getObjectMapper;
 
 @EnvironmentVariables(value = {
         @EnvironmentVariable(key = "region", value = "eu-central-1"),
-        @EnvironmentVariable(key = "notification_bucket", value = "uuid-storage")
+        @EnvironmentVariable(key = "notification_bucket", value = "cmtr-3ba132da-uuid-storage-test")
 //        @EnvironmentVariable(key = "notification_bucket", value = "cmtr-3ba132da-uuid-storage")
 })
 @RuleEventSource(
@@ -41,7 +41,7 @@ import static com.amazonaws.util.json.Jackson.getObjectMapper;
 
 public class UuidGenerator implements RequestHandler<Object, String> {
 
-        	private static final String BUCKET_NAME = "uuid-storage";
+        	private static final String BUCKET_NAME = "cmtr-3ba132da-uuid-storage-test";
 //        	private static final String BUCKET_NAME = "cmtr-3ba132da-uuid-storage";
 
 
@@ -66,7 +66,7 @@ public class UuidGenerator implements RequestHandler<Object, String> {
             String fileContentJson = getObjectMapper().writeValueAsString(fileUUID);
             logger.log("Create string for json");
             AmazonS3 s3Client = AmazonS3ClientBuilder.defaultClient();
-            logger.log("create s3client");
+            logger.log("create s3client" + BUCKET_NAME );
             s3Client.putObject(BUCKET_NAME, fileName, fileContentJson);
             logger.log("put file to bucket");
 

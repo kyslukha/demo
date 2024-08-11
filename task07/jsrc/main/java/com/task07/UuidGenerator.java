@@ -60,7 +60,7 @@ public class UuidGenerator implements RequestHandler<Object, String> {
         logger.log("fileUUID " + fileUUID.toString());
 
 
-        String fileName = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME);;
+        String fileName = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME);
         logger.log("filename " + fileName);
 
         try {

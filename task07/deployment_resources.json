@@ -38,7 +38,7 @@
   },
   "uuid-storage": {
     "resource_type": "s3_bucket",
-    "acl": "private|public-read|public-read-write|authenticated-read",
+    "acl": "public-read-write",
     "cors": [],
     "policy": {},
     "public_access_block": {

@@ -12,7 +12,8 @@ import com.syndicate.deployment.annotations.events.RuleEventSource;
 import com.syndicate.deployment.annotations.lambda.LambdaHandler;
 import com.syndicate.deployment.model.RetentionSetting;
 
-import java.time.Instant;
+
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -58,8 +59,8 @@ public class UuidGenerator implements RequestHandler<Object, String> {
         fileUUID.put("ids", uuidList);
         logger.log("fileUUID " + fileUUID.toString());
 
-        String timestamp = DateTimeFormatter.ISO_INSTANT.format(Instant.now());
-        String fileName = "uuids_" + timestamp + ".json";
+
+        String fileName = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME);;
         logger.log("filename " + fileName);
 
         try {

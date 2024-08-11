@@ -64,7 +64,9 @@ public class UuidGenerator implements RequestHandler<Object, String> {
 
         try {
             String fileContentJson = getObjectMapper().writeValueAsString(fileUUID);
+            logger.log("Create string for json");
             AmazonS3 s3Client = AmazonS3ClientBuilder.defaultClient();
+            logger.log("create s3client");
             s3Client.putObject(BUCKET_NAME, fileName, fileContentJson);
             logger.log("put file to bucket");
 

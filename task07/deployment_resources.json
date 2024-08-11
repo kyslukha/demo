@@ -38,7 +38,7 @@
   },
   "uuid-storage": {
     "resource_type": "s3_bucket",
-    "acl": "public-read-write",
+    "acl": "private",
     "cors": [],
     "policy": {},
     "public_access_block": {
@@ -51,7 +51,6 @@
   "uuid_trigger": {
     "resource_type": "cloudwatch_rule",
     "rule_type": "schedule",
-    "region": "eu-central-1",
     "expression": "rate(1 minute)"
   }
 }

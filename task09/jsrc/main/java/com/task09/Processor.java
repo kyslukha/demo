@@ -14,7 +14,6 @@ import com.amazonaws.xray.AWSXRayRecorderBuilder;
 import com.amazonaws.xray.entities.Segment;
 import com.amazonaws.xray.entities.Subsegment;
 import com.syndicate.deployment.annotations.environment.EnvironmentVariable;
-import com.syndicate.deployment.annotations.events.DynamoDbTriggerEventSource;
 import com.syndicate.deployment.annotations.lambda.LambdaHandler;
 import com.syndicate.deployment.annotations.lambda.LambdaUrlConfig;
 import com.syndicate.deployment.model.RetentionSetting;
@@ -41,26 +40,24 @@ import java.util.UUID;
         authType = AuthType.NONE,
         invokeMode = InvokeMode.BUFFERED
 )
-@EnvironmentVariable(key = "WEATHER_TABLE", value = "${target_table}")
+//@EnvironmentVariable(key = "WEATHER_TABLE", value = "${target_table}")
 
-@DynamoDbTriggerEventSource(targetTable = "{target_table}", batchSize = 10)
+public class Processor implements RequestHandler<DynamodbEvent, String> { private static final String TABLE_NAME_ENV = "WEATHER_TABLE";
+    private final String tableName = "cmtr-3ba132da-Weather-test";
+//    private final String tableName = "cmtr-3ba132da-Weather";
 
 
-public class Processor implements RequestHandler<DynamodbEvent, String> {
-    private static final String TABLE_NAME_ENV = "WEATHER_TABLE";
-    private final String tableName;
+
 
     private final AmazonDynamoDB client = AmazonDynamoDBClientBuilder.defaultClient();
     private final Table table;
 
-    private final AWSXRayRecorder xrayRecorder = AWSXRayRecorderBuilder.defaultRecorder();
+
     private final com.amazonaws.services.dynamodbv2.document.DynamoDB dynamoDB = new com.amazonaws.services.dynamodbv2.document.DynamoDB(client);
 
     public Processor() {
-        tableName = System.getenv(TABLE_NAME_ENV);
+
         table = dynamoDB.getTable(tableName);
-        Segment segment = xrayRecorder.beginSegment("processor");
-        AWSXRay.setGlobalRecorder(xrayRecorder);
     }
 
     @Override
@@ -69,11 +66,9 @@ public class Processor implements RequestHandler<DynamodbEvent, String> {
         logger.log("events " + dynamodbEvent.getRecords());
         logger.log("function name " + context.getFunctionName());
         logger.log("table name " + tableName);
-        logger.log("xray " + xrayRecorder.toString());
 
-        Subsegment subsegment = AWSXRay.beginSubsegment("WeatherLambda.handleRequest");
-        logger.log("segment " + subsegment.getNamespace());
-        logger.log("beginSubsegment " + subsegment.getNamespace());
+
+
 
         try {
             URL url = new URL("https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current=temperature_2m,wind_speed_10m&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m");
@@ -92,12 +87,8 @@ public class Processor implements RequestHandler<DynamodbEvent, String> {
                 return String.valueOf(response);
             }
         } catch (IOException e) {
-            AWSXRay.getCurrentSegment().addException(e);
-            logger.log("xray exception " + xrayRecorder.getCurrentSegment().toString());
+
             throw new RuntimeException(e);
-        } finally {
-            AWSXRay.endSubsegment();
-            logger.log("xray after finally " + xrayRecorder.toString());
         }
         return null;
     }

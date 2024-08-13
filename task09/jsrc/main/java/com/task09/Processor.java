@@ -95,7 +95,7 @@ public class Processor implements RequestHandler<DynamodbEvent, String> { privat
 
     private void saveWeatherDataToDynamoDB(StringBuilder weatherData) {
         Item item = new Item().withPrimaryKey("id", UUID.randomUUID()
-                .toString()).withString("forecast", String.valueOf(weatherData));
+                .toString()).withJSON("forecast", String.valueOf(weatherData));
         table.putItem(item);
     }
 

@@ -34,14 +34,22 @@ public class SignupHandler implements RequestHandler<APIGatewayProxyRequestEvent
             logger.log("email" + email);
             logger.log("password " + password);
 
-            if (!isValidEmail(email) || !isValidPassword(password)) {
+            if (!isValidEmail(email)) {
                 logger.log("invalid email or password");
                 return new APIGatewayProxyResponseEvent()
                         .withStatusCode(400)
-                        .withBody("Invalid email or password format.");
+                        .withBody("Invalid email format.");
+            }
+            logger.log("valid email");
+            if (!isValidPassword(password)) {
+                logger.log("invalid email or password");
+                return new APIGatewayProxyResponseEvent()
+                        .withStatusCode(400)
+                        .withBody("Invalid password format.");
             }
 
-            logger.log("valid email and password");
+
+            logger.log("valid password");
 
             software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserRequest adminCreateUserRequest
                     = AdminCreateUserRequest.builder()
@@ -61,14 +69,6 @@ public class SignupHandler implements RequestHandler<APIGatewayProxyRequestEvent
 
             logger.log("create user response");
 
-            cognitoClient.adminSetUserPassword(builder -> builder
-                    .userPoolId(userPoolId)
-                    .username(email)
-                    .password(password)
-                    .permanent(true)
-            );
-            logger.log("password set");
-
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(200)
                     .withBody("Sign-up process is successful");
@@ -87,7 +87,7 @@ public class SignupHandler implements RequestHandler<APIGatewayProxyRequestEvent
     }
 
     private boolean isValidEmail(String email) {
-        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
+        String emailRegex = "^[a-zA-Z0-9._%±]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$";
         Pattern pat = Pattern.compile(emailRegex);
         return pat.matcher(email).matches();
     }

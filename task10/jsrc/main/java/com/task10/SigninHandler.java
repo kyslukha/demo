@@ -1,6 +1,6 @@
 package com.task10;
 
-import com.amazonaws.services.cognitoidp.model.AdminInitiateAuthResult;
+
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
@@ -38,6 +38,8 @@ private final CognitoIdentityProviderClient client = CognitoIdentityProviderClie
                             "PASSWORD", password
                     ))
                     .build();
+
+
 
             AdminInitiateAuthResponse authResponse = client.adminInitiateAuth(authRequest);
             String idToken = authResponse.authenticationResult().idToken();

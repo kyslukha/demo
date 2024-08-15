@@ -1,6 +1,7 @@
 package com.task10;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
@@ -36,7 +37,7 @@ public class ApiHandler implements RequestHandler<APIGatewayProxyRequestEvent, A
 
 	private final Map<String, String> headersForCORS;
 
-	public ApiHandler(Map<String, String> headersForCORS) {
+	public ApiHandler() {
 		this.headersForCORS = initHeadersForCORS();
 	}
 
@@ -46,6 +47,10 @@ public class ApiHandler implements RequestHandler<APIGatewayProxyRequestEvent, A
 		String resource = request.getResource();
 		String httpMethod = request.getHttpMethod();
 		APIGatewayProxyResponseEvent response = null;
+		LambdaLogger logger = context.getLogger();
+		logger.log("resource " + resource);
+		logger.log("method " + httpMethod);
+		logger.log("function " + context.getFunctionName());
 
 		switch (resource) {
 			case "/signup":

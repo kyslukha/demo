@@ -1,6 +1,7 @@
 package com.task10;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
@@ -29,12 +30,18 @@ public class SignupHandler implements RequestHandler<APIGatewayProxyRequestEvent
             String lastName = body.get("lastName").asText();
             String email = body.get("email").asText();
             String password = body.get("password").asText();
+            LambdaLogger logger = context.getLogger();
+            logger.log("email" + email);
+            logger.log("password " + password);
 
             if (!isValidEmail(email) || !isValidPassword(password)) {
+                logger.log("invalid email or password");
                 return new APIGatewayProxyResponseEvent()
                         .withStatusCode(400)
                         .withBody("Invalid email or password format.");
             }
+
+            logger.log("valid email and password");
 
             software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserRequest adminCreateUserRequest
                     = AdminCreateUserRequest.builder()
@@ -48,8 +55,11 @@ public class SignupHandler implements RequestHandler<APIGatewayProxyRequestEvent
                     )
                     .temporaryPassword(password)
                     .build();
+            logger.log("create adminCreateUserRequest");
 
             AdminCreateUserResponse createUserResponse = cognitoClient.adminCreateUser(adminCreateUserRequest);
+
+            logger.log("create user response");
 
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(200)

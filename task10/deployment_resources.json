@@ -73,7 +73,7 @@
     "dependencies": [],
     "resources": {
       "/signin": {
-        "enable_cors": true,
+        "enable_cors": false,
         "POST": {
           "enable_proxy": true,
           "authorization_type": "NONE",
@@ -88,7 +88,7 @@
         }
       },
       "/signup": {
-        "enable_cors": true,
+        "enable_cors": false,
         "POST": {
           "enable_proxy": true,
           "authorization_type": "NONE",

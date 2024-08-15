@@ -61,6 +61,14 @@ public class SignupHandler implements RequestHandler<APIGatewayProxyRequestEvent
 
             logger.log("create user response");
 
+            cognitoClient.adminSetUserPassword(builder -> builder
+                    .userPoolId(userPoolId)
+                    .username(email)
+                    .password(password)
+                    .permanent(true)
+            );
+            logger.log("password set");
+
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(200)
                     .withBody("Sign-up process is successful");

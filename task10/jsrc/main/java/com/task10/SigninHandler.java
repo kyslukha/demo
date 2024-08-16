@@ -48,7 +48,7 @@ public class SigninHandler extends UserHandler implements RequestHandler<APIGate
 
         } catch (Exception e) {
             return new APIGatewayProxyResponseEvent()
-                    .withStatusCode(401)
+                    .withStatusCode(400)
                     .withBody("There was an error in the request, problem token.");
         }
     }

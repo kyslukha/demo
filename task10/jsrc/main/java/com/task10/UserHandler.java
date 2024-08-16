@@ -82,16 +82,19 @@ public class UserHandler {
                 .build());
     }
 
-//    protected boolean isValidPassword(String password) {
-//        String passwordRegex = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[$%^*])[A-Za-z\\d$%^*]{12,}$";
-//        Pattern pat = Pattern.compile(passwordRegex);
-//        return pat.matcher(password).matches();
-//    }
-//
-//    protected boolean isValidEmail(String email) {
-//        String emailRegex = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$";
-//        Pattern pat = Pattern.compile(emailRegex);
-//        return pat.matcher(email).matches();
-//    }
+
+
+        protected static boolean isValidPassword (String password){
+            String passwordRegex = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[$%^*])[A-Za-z\\d$%^*]{12,}$";
+            Pattern pat = Pattern.compile(passwordRegex);
+            return pat.matcher(password).matches();
+        }
+
+        protected static boolean isValidEmail (String email){
+            String emailRegex = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$";
+            Pattern pat = Pattern.compile(emailRegex);
+            return pat.matcher(email).matches();
+        }
+
 
 }

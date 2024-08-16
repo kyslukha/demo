@@ -7,6 +7,7 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
@@ -15,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class TablesPostHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
@@ -25,6 +27,8 @@ public class TablesPostHandler implements RequestHandler<APIGatewayProxyRequestE
     @Override
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent request, Context context) {
         try {
+            LambdaLogger logger = context.getLogger();
+            logger.log("welcome to POST_TABLE");
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode body = objectMapper.readTree(request.getBody());
 
@@ -34,7 +38,17 @@ public class TablesPostHandler implements RequestHandler<APIGatewayProxyRequestE
             boolean isVip = body.get("isVip").asBoolean();
             int minOrder = body.has("minOrder") ? body.get("minOrder").asInt() : 0;
 
+            logger.log("postTable//// data");
+            logger.log("postTable//// id " + id);
+            logger.log("postTable//// number " + number);
+            logger.log("postTable//// places " + places);
+            logger.log("postTable//// isVip " + isVip);
+            logger.log("postTable//// minOrder " + minOrder);
+
+
             Table table = dynamoDB.getTable(TABLES);
+
+            logger.log("postTable//// table " + table.getTableName());
 
             Map<String, Object> item = new HashMap<>();
             item.put("id", id);
@@ -44,7 +58,9 @@ public class TablesPostHandler implements RequestHandler<APIGatewayProxyRequestE
             if (minOrder > 0) {
                 item.put("minOrder", minOrder);
             }
+            Logger.getLogger("postTable///// create map " + objectMapper.toString());
             table.putItem(new Item().withMap(String.valueOf(id), item));
+            Logger.getLogger("postTable///// put to table item with id " + id);
 
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(200)
@@ -53,7 +69,7 @@ public class TablesPostHandler implements RequestHandler<APIGatewayProxyRequestE
         } catch (Exception e) {
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(400)
-                    .withBody("There was an error in the request.");
+                    .withBody("There was an error in the request with table.");
         }
     }
 }

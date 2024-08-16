@@ -1,22 +1,17 @@
 package com.task10;
 
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
 
 public class TablesPostHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
@@ -27,49 +22,43 @@ public class TablesPostHandler implements RequestHandler<APIGatewayProxyRequestE
     @Override
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent request, Context context) {
         try {
-            LambdaLogger logger = context.getLogger();
-            logger.log("welcome to POST_TABLE");
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode body = objectMapper.readTree(request.getBody());
+            Map bodyMap = new ObjectMapper().readValue(request.getBody(), Map.class);
 
-            int id = body.get("id").asInt();
-            int number = body.get("number").asInt();
-            int places = body.get("places").asInt();
-            boolean isVip = body.get("isVip").asBoolean();
-            int minOrder = body.has("minOrder") ? body.get("minOrder").asInt() : 0;
+            Object id = bodyMap.get("id");
+            Integer idInt = (Integer) id;
+            Object number = bodyMap.get("number");
 
-            logger.log("postTable//// data");
-            logger.log("postTable//// id " + id);
-            logger.log("postTable//// number " + number);
-            logger.log("postTable//// places " + places);
-            logger.log("postTable//// isVip " + isVip);
-            logger.log("postTable//// minOrder " + minOrder);
+            Integer numberInt = (Integer) number;
 
+            Object places = bodyMap.get("places");
+
+            Integer placesInt = (Integer) places;
+
+            Object isVip = bodyMap.get("isVip");
+
+            boolean isVipBool = isVip.equals("true");
+
+            Object minOrder = bodyMap.get("minOrder");
+
+            Integer minOrderInt = (Integer) minOrder;
+
+            Item item = new Item().withPrimaryKey("id", idInt)
+                    .withInt("number", numberInt)
+                    .withInt("places", placesInt)
+                    .withBoolean("isVip", isVipBool)
+                    .withInt("minOrder", minOrderInt);
 
             Table table = dynamoDB.getTable(TABLES);
 
-            logger.log("postTable//// table " + table.getTableName());
-
-            Map<String, Object> item = new HashMap<>();
-            item.put("id", id);
-            item.put("number", number);
-            item.put("places", places);
-            item.put("isVip", isVip);
-            if (minOrder > 0) {
-                item.put("minOrder", minOrder);
-            }
-            Logger.getLogger("postTable///// create map " + objectMapper.toString());
-            table.putItem(new Item().withMap(String.valueOf(id), item));
-            Logger.getLogger("postTable///// put to table item with id " + id);
-
+            table.putItem(item);
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(200)
-                    .withBody("{ \"id\": " + id + " }");
+                    .withBody("{ \"id\": " + bodyMap.get("id") + " }");
 
         } catch (Exception e) {
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(400)
-                    .withBody("There was an error in the request with table.");
+                    .withBody("There was an error in the request.");
         }
     }
 }

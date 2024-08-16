@@ -42,12 +42,12 @@ public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRe
             LambdaLogger logger = context.getLogger();
             logger.log("POST reserv data " + tableNumber + " " + clientName + " " + phoneNumber + " " + date + " " + slotTimeStart + " " + slotTimeEnd );
 
-            if (!isValidDate(date) || !isValidTime(slotTimeStart) || !isValidTime(slotTimeEnd)) {
-                logger.log("Invalid date or time format.");
-                return new APIGatewayProxyResponseEvent()
-                        .withStatusCode(400)
-                        .withBody("Invalid date or time format.");
-            }
+//            if (!isValidDate(date) || !isValidTime(slotTimeStart) || !isValidTime(slotTimeEnd)) {
+//                logger.log("Invalid date or time format.");
+//                return new APIGatewayProxyResponseEvent()
+//                        .withStatusCode(400)
+//                        .withBody("Invalid date or time format.");
+//            }
             logger.log("Good validation//////////////");
 
             String reservationId = UUID.randomUUID().toString();
@@ -81,23 +81,23 @@ public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRe
                     .withBody("There was an error in the request.");
         }
     }
-    private boolean isValidDate(String date) {
-        try {
-            LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    private boolean isValidTime(String time) {
-        try {
-            LocalTime.parse(time, DateTimeFormatter.ofPattern("HH:mm"));
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
+//    private boolean isValidDate(String date) {
+//        try {
+//            LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+//            return true;
+//        } catch (Exception e) {
+//            return false;
+//        }
+//    }
+//
+//    private boolean isValidTime(String time) {
+//        try {
+//            LocalTime.parse(time, DateTimeFormatter.ofPattern("HH:mm"));
+//            return true;
+//        } catch (Exception e) {
+//            return false;
+//        }
+//    }
 
 }
 

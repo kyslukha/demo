@@ -33,16 +33,16 @@ public class SignupHandler extends UserHandler implements RequestHandler<APIGate
             String email = body.get("email").asText();
             String password = body.get("password").asText();
 
-            if (!isValidEmail(email)) {
-                return new APIGatewayProxyResponseEvent()
-                        .withStatusCode(400)
-                        .withBody("Invalid email format.");
-            }
-            if (!isValidPassword(password)) {
-                return new APIGatewayProxyResponseEvent()
-                        .withStatusCode(400)
-                        .withBody("Invalid password format.");
-            }
+//            if (!isValidEmail(email)) {
+//                return new APIGatewayProxyResponseEvent()
+//                        .withStatusCode(400)
+//                        .withBody("Invalid email format.");
+//            }
+//            if (!isValidPassword(password)) {
+//                return new APIGatewayProxyResponseEvent()
+//                        .withStatusCode(400)
+//                        .withBody("Invalid password format.");
+//            }
 
             Map<String, String> user = Map.of("email", email,
                     "password", password,

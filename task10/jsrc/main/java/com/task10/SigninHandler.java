@@ -29,16 +29,16 @@ public class SigninHandler extends UserHandler implements RequestHandler<APIGate
             String password = body.get("password").asText();
 
 
-            if (!isValidEmail(email)) {
-                return new APIGatewayProxyResponseEvent()
-                        .withStatusCode(400)
-                        .withBody("Invalid email format.");
-            }
-            if (!isValidPassword(password)) {
-                return new APIGatewayProxyResponseEvent()
-                        .withStatusCode(400)
-                        .withBody("Invalid password format.");
-            }
+//            if (!isValidEmail(email)) {
+//                return new APIGatewayProxyResponseEvent()
+//                        .withStatusCode(400)
+//                        .withBody("Invalid email format.");
+//            }
+//            if (!isValidPassword(password)) {
+//                return new APIGatewayProxyResponseEvent()
+//                        .withStatusCode(400)
+//                        .withBody("Invalid password format.");
+//            }
 
             String idToken = signIn(email, password).authenticationResult().idToken();
 

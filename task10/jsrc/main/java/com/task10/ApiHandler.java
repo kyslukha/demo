@@ -11,6 +11,9 @@ import com.syndicate.deployment.annotations.lambda.LambdaHandler;
 import com.syndicate.deployment.annotations.resources.DependsOn;
 import com.syndicate.deployment.model.ResourceType;
 import com.syndicate.deployment.model.RetentionSetting;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient;
 
 
 import java.util.Map;
@@ -36,9 +39,18 @@ import static com.syndicate.deployment.model.environment.ValueTransformer.USER_P
 public class ApiHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
 	private final Map<String, String> headersForCORS;
+	private final CognitoIdentityProviderClient cognitoClient;
 
 	public ApiHandler() {
+		this.cognitoClient = initCognitoClient();
 		this.headersForCORS = initHeadersForCORS();
+	}
+
+	private CognitoIdentityProviderClient initCognitoClient() {
+		return CognitoIdentityProviderClient.builder()
+				.region(Region.of(System.getenv("REGION")))
+				.credentialsProvider(DefaultCredentialsProvider.create())
+				.build();
 	}
 
 
@@ -55,13 +67,13 @@ public class ApiHandler implements RequestHandler<APIGatewayProxyRequestEvent, A
 		switch (resource) {
 			case "/signup":
 				if ("POST".equalsIgnoreCase(httpMethod)) {
-					response = new SignupHandler().handleRequest(request, context).withHeaders(headersForCORS);
+					response = new SignupHandler(cognitoClient).handleRequest(request, context).withHeaders(headersForCORS);
 				}
 				break;
 
 			case "/signin":
 				if ("POST".equalsIgnoreCase(httpMethod)) {
-					response = new SigninHandler().handleRequest(request, context).withHeaders(headersForCORS);
+					response = new SigninHandler(cognitoClient).handleRequest(request, context).withHeaders(headersForCORS);
 				}
 				break;
 

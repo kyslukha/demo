@@ -8,17 +8,23 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient;
-import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserRequest;
-import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserResponse;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminRespondToAuthChallengeResponse;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeType;
 
+import java.util.Map;
 import java.util.regex.Pattern;
 
-public class SignupHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+public class SignupHandler extends UserHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private final String userPoolId = System.getenv("COGNITO_ID");
+    private final String clientId = System.getenv("CLIENT_ID");
 
-    private final CognitoIdentityProviderClient cognitoClient = CognitoIdentityProviderClient.create();
+
+
+    public SignupHandler (CognitoIdentityProviderClient cognitoClient) {
+        super(cognitoClient);
+    }
+
 
     @Override
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent request, Context context) {
@@ -48,27 +54,26 @@ public class SignupHandler implements RequestHandler<APIGatewayProxyRequestEvent
                         .withBody("Invalid password format.");
             }
 
-
             logger.log("valid password");
 
-            software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserRequest adminCreateUserRequest
-                    = AdminCreateUserRequest.builder()
-                    .userPoolId(userPoolId)
-                    .username(email)
-                    .messageAction("SUPPRESS")
-                    .userAttributes(
-                            AttributeType.builder().name("given_name").value(firstName).build(),
-                            AttributeType.builder().name("family_name").value(lastName).build(),
-                            AttributeType.builder().name("email").value(email).build()
-                    )
-                    .temporaryPassword(password)
-                    .build();
-            logger.log("create adminCreateUserRequest");
+            Map<String, String> user = Map.of("email", email,
+                    "password", password,
+                    "firstName", firstName,
+                    "lastName", lastName);
 
-            AdminCreateUserResponse createUserResponse = cognitoClient.adminCreateUser(adminCreateUserRequest);
 
-            logger.log("create user response");
+            String userId = signUp(user)
+                    .user().attributes().stream()
+                    .filter(attr -> attr.name().equals("sub"))
+                    .map(AttributeType::value)
+                    .findAny()
+                    .orElseThrow(() -> new RuntimeException("Sub not found."));
 
+            logger.log("userId " + userId);
+
+            confirmSignUp(email,password, logger);
+//            logger.log("token " + token)
+            logger.log("END");
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(200)
                     .withBody("Sign-up process is successful");
@@ -79,6 +84,8 @@ public class SignupHandler implements RequestHandler<APIGatewayProxyRequestEvent
                     .withBody("There was an error in the request.");
         }
     }
+
+
 
     private boolean isValidPassword(String password) {
         String passwordRegex = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[$%^*])[A-Za-z\\d$%^*]{12,}$";

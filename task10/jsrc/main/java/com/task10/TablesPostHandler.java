@@ -35,7 +35,7 @@ public class TablesPostHandler implements RequestHandler<APIGatewayProxyRequestE
             int minOrder = body.has("minOrder") ? body.get("minOrder").asInt() : 0;
 
             Table table = dynamoDB.getTable(TABLES);
-//            Table table = dynamoDB.getTable("cmtr-3ba132da-Tables-test");
+
             Map<String, Object> item = new HashMap<>();
             item.put("id", id);
             item.put("number", number);

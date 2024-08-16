@@ -1,6 +1,5 @@
 package com.task10;
 
-import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserResponse;
@@ -51,7 +50,7 @@ public class UserHandler {
                 .build());
     }
 
-    protected AdminCreateUserResponse signUp(Map<String,String> user) {
+    protected AdminCreateUserResponse signUp(Map<String, String> user) {
         return cognitoClient.adminCreateUser(AdminCreateUserRequest.builder()
                 .userPoolId(userPoolId)
                 .username(user.get("email"))
@@ -82,6 +81,7 @@ public class UserHandler {
                 .clientId(clientId)
                 .build());
     }
+
     protected boolean isValidPassword(String password) {
         String passwordRegex = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[$%^*])[A-Za-z\\d$%^*]{12,}$";
         Pattern pat = Pattern.compile(passwordRegex);
@@ -89,7 +89,7 @@ public class UserHandler {
     }
 
     protected boolean isValidEmail(String email) {
-        String emailRegex = "^[a-zA-Z0-9._%±-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$";
+        String emailRegex = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$";
         Pattern pat = Pattern.compile(emailRegex);
         return pat.matcher(email).matches();
     }

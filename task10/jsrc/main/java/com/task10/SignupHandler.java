@@ -1,18 +1,15 @@
 package com.task10;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient;
-import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminRespondToAuthChallengeResponse;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeType;
 
 import java.util.Map;
-import java.util.regex.Pattern;
 
 public class SignupHandler extends UserHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
@@ -20,8 +17,7 @@ public class SignupHandler extends UserHandler implements RequestHandler<APIGate
     private final String clientId = System.getenv("CLIENT_ID");
 
 
-
-    public SignupHandler (CognitoIdentityProviderClient cognitoClient) {
+    public SignupHandler(CognitoIdentityProviderClient cognitoClient) {
         super(cognitoClient);
     }
 
@@ -60,7 +56,7 @@ public class SignupHandler extends UserHandler implements RequestHandler<APIGate
                     .map(AttributeType::value)
                     .findAny()
                     .orElseThrow(() -> new RuntimeException("Sub not found."));
-            confirmSignUp(email,password);
+            confirmSignUp(email, password);
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(200)
                     .withBody("Sign-up process is successful");

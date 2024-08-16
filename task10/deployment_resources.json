@@ -43,7 +43,7 @@
     ],
     "resource_type": "iam_role"
   },
-  "simple-booking-userpool": {
+  "${booking_userpool}": {
     "resource_type": "cognito_idp",
     "password_policy": {
       "minimum_length": 12,

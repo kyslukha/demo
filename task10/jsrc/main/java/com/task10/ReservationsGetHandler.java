@@ -7,6 +7,7 @@ import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
@@ -25,12 +26,17 @@ public class ReservationsGetHandler implements RequestHandler<APIGatewayProxyReq
         try {
             Table table = dynamoDB.getTable(RESERVATIONS);
             ScanSpec scanSpec = new ScanSpec();
+            LambdaLogger logger = context.getLogger();
+            logger.log("GETreserv   table " + table.getTableName());
 
             List<Item> items = table.scan(scanSpec).getLastLowLevelResult().getItems();
+            logger.log("GETreserv   create list of item");
             List<Object> reservationsList = new ArrayList<>();
+
 
             for (Item item : items) {
                 reservationsList.add(item.asMap());
+                logger.log("GETreserv   add to list " + reservationsList.toString());
             }
 
             return new APIGatewayProxyResponseEvent()

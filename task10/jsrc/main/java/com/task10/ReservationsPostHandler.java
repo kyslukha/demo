@@ -5,11 +5,13 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import software.amazon.awssdk.services.dynamodb.endpoints.internal.Value;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -33,31 +35,41 @@ public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRe
 
             int tableNumber = body.get("tableNumber").asInt();
             String clientName = body.get("clientName").asText();
-            String phoneNumber = body.get("phoneNumber").asText();
+            Integer phoneNumber = Integer.valueOf(body.get("phoneNumber").asText());
             String date = body.get("date").asText();
             String slotTimeStart = body.get("slotTimeStart").asText();
             String slotTimeEnd = body.get("slotTimeEnd").asText();
+            LambdaLogger logger = context.getLogger();
+            logger.log("POST reserv data " + tableNumber + " " + clientName + " " + phoneNumber + " " + date + " " + slotTimeStart + " " + slotTimeEnd );
 
             if (!isValidDate(date) || !isValidTime(slotTimeStart) || !isValidTime(slotTimeEnd)) {
+                logger.log("Invalid date or time format.");
                 return new APIGatewayProxyResponseEvent()
                         .withStatusCode(400)
                         .withBody("Invalid date or time format.");
             }
+            logger.log("Good validation//////////////");
 
             String reservationId = UUID.randomUUID().toString();
+            logger.log("id////////////// " + reservationId);
 
             Table table = dynamoDB.getTable(RESERVATIONS);
-//            Table table = dynamoDB.getTable("cmtr-3ba132da-Reservations-test");
+            logger.log("table//////////// " + table.getTableName());
+
             Map<String, Object> item = new HashMap<>();
             item.put("reservationId", reservationId);
             item.put("tableNumber", tableNumber);
             item.put("clientName", clientName);
-            item.put("phoneNumber", phoneNumber);
+            item.put("phoneNumber", String.valueOf(phoneNumber));
             item.put("date", date);
             item.put("slotTimeStart", slotTimeStart);
             item.put("slotTimeEnd", slotTimeEnd);
+            logger.log("create map//////////// " );
+
 
             table.putItem(new Item().withMap(reservationId, item));
+            logger.log("put items  in map" );
+
 
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(200)

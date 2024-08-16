@@ -2,7 +2,6 @@ package com.task10;
 
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
@@ -21,16 +20,14 @@ public class SigninHandler extends UserHandler implements RequestHandler<APIGate
     }
 
     @Override
-    public APIGatewayProxyResponseEvent  handleRequest(APIGatewayProxyRequestEvent request, Context context) {
+    public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent request, Context context) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode body = objectMapper.readTree(request.getBody());
 
             String email = body.get("email").asText();
             String password = body.get("password").asText();
-            LambdaLogger logger = context.getLogger();
-            logger.log("SINGIN email " + email);
-            logger.log("SINGIN password " + password);
+
 
             if (!isValidEmail(email)) {
                 return new APIGatewayProxyResponseEvent()
@@ -44,8 +41,6 @@ public class SigninHandler extends UserHandler implements RequestHandler<APIGate
             }
 
             String idToken = signIn(email, password).authenticationResult().idToken();
-
-            logger.log("SIGIN token " + idToken);
 
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(200)

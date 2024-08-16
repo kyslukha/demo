@@ -1,7 +1,6 @@
 package com.task10;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
@@ -15,107 +14,103 @@ import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient;
 
-
 import java.util.Map;
 
 import static com.syndicate.deployment.model.environment.ValueTransformer.USER_POOL_NAME_TO_CLIENT_ID;
 import static com.syndicate.deployment.model.environment.ValueTransformer.USER_POOL_NAME_TO_USER_POOL_ID;
 
 @LambdaHandler(
-    lambdaName = "api_handler",
-	roleName = "api_handler-role",
-	isPublishVersion = false,
-	logsExpiration = RetentionSetting.SYNDICATE_ALIASES_SPECIFIED
+        lambdaName = "api_handler",
+        roleName = "api_handler-role",
+        isPublishVersion = false,
+        logsExpiration = RetentionSetting.SYNDICATE_ALIASES_SPECIFIED
 )
 @EnvironmentVariables(value = {
-		@EnvironmentVariable(key = "REGION", value = "${region}"),
-		@EnvironmentVariable(key = "COGNITO_ID", value = "${booking_userpool}", valueTransformer = USER_POOL_NAME_TO_USER_POOL_ID),
-		@EnvironmentVariable(key = "CLIENT_ID", value = "${booking_userpool}", valueTransformer = USER_POOL_NAME_TO_CLIENT_ID),
-		@EnvironmentVariable(key = "NAME_TABLE_TABLES", value = "${tables_table}"),
-		@EnvironmentVariable(key = "NAME_TABLE_RESERVATIONS", value = "${reservations_table}")
+        @EnvironmentVariable(key = "REGION", value = "${region}"),
+        @EnvironmentVariable(key = "COGNITO_ID", value = "${booking_userpool}", valueTransformer = USER_POOL_NAME_TO_USER_POOL_ID),
+        @EnvironmentVariable(key = "CLIENT_ID", value = "${booking_userpool}", valueTransformer = USER_POOL_NAME_TO_CLIENT_ID),
+        @EnvironmentVariable(key = "NAME_TABLE_TABLES", value = "${tables_table}"),
+        @EnvironmentVariable(key = "NAME_TABLE_RESERVATIONS", value = "${reservations_table}")
 })
 @DependsOn(resourceType = ResourceType.COGNITO_USER_POOL, name = "${booking_userpool}")
 
 public class ApiHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
-	private final Map<String, String> headersForCORS;
-	private final CognitoIdentityProviderClient cognitoClient;
+    private final Map<String, String> headersForCORS;
+    private final CognitoIdentityProviderClient cognitoClient;
 
-	public ApiHandler() {
-		this.cognitoClient = initCognitoClient();
-		this.headersForCORS = initHeadersForCORS();
-	}
+    public ApiHandler() {
+        this.cognitoClient = initCognitoClient();
+        this.headersForCORS = initHeadersForCORS();
+    }
 
-	private CognitoIdentityProviderClient initCognitoClient() {
-		return CognitoIdentityProviderClient.builder()
-				.region(Region.of(System.getenv("REGION")))
-				.credentialsProvider(DefaultCredentialsProvider.create())
-				.build();
-	}
+    private CognitoIdentityProviderClient initCognitoClient() {
+        return CognitoIdentityProviderClient.builder()
+                .region(Region.of(System.getenv("REGION")))
+                .credentialsProvider(DefaultCredentialsProvider.create())
+                .build();
+    }
 
 
-	@Override
-	public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent request, Context context) {
-		String resource = request.getResource();
-		String httpMethod = request.getHttpMethod();
-		APIGatewayProxyResponseEvent response = null;
-		LambdaLogger logger = context.getLogger();
-		logger.log("resource " + resource);
-		logger.log("method " + httpMethod);
-		logger.log("function " + context.getFunctionName());
+    @Override
+    public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent request, Context context) {
+        String resource = request.getResource();
+        String httpMethod = request.getHttpMethod();
+        APIGatewayProxyResponseEvent response = null;
 
-		switch (resource) {
-			case "/signup":
-				if ("POST".equalsIgnoreCase(httpMethod)) {
-					response = new SignupHandler(cognitoClient).handleRequest(request, context).withHeaders(headersForCORS);
-				}
-				break;
+        switch (resource) {
+            case "/signup":
+                if ("POST".equalsIgnoreCase(httpMethod)) {
+                    response = new SignupHandler(cognitoClient).handleRequest(request, context).withHeaders(headersForCORS);
+                }
+                break;
 
-			case "/signin":
-				if ("POST".equalsIgnoreCase(httpMethod)) {
-					response = new SigninHandler(cognitoClient).handleRequest(request, context).withHeaders(headersForCORS);
-				}
-				break;
+            case "/signin":
+                if ("POST".equalsIgnoreCase(httpMethod)) {
+                    response = new SigninHandler(cognitoClient).handleRequest(request, context).withHeaders(headersForCORS);
+                }
+                break;
 
-			case "/tables":
-				if ("POST".equalsIgnoreCase(httpMethod)) {
-					response = new TablesPostHandler().handleRequest(request, context).withHeaders(headersForCORS);
-				} else if ("GET".equalsIgnoreCase(httpMethod)) {
-					response = new TablesGetHandler().handleRequest(request, context).withHeaders(headersForCORS);
-				}
-				break;
+            case "/tables":
+                if ("POST".equalsIgnoreCase(httpMethod)) {
+                    response = new TablesPostHandler().handleRequest(request, context).withHeaders(headersForCORS);
+                } else if ("GET".equalsIgnoreCase(httpMethod)) {
+                    response = new TablesGetHandler().handleRequest(request, context).withHeaders(headersForCORS);
+                }
+                break;
 
-			case "/tables/{tableId}":
-				if ("GET".equalsIgnoreCase(httpMethod)) {
-					response = new TablesGetByIdHandler().handleRequest(request, context).withHeaders(headersForCORS);
-				}
-				break;
+            case "/tables/{tableId}":
+                if ("GET".equalsIgnoreCase(httpMethod)) {
+                    response = new TablesGetByIdHandler().handleRequest(request, context).withHeaders(headersForCORS);
+                }
+                break;
 
-			case "/reservations":
-				if ("POST".equalsIgnoreCase(httpMethod)) {
-					response = new ReservationsPostHandler().handleRequest(request, context).withHeaders(headersForCORS);
-				} else if ("GET".equalsIgnoreCase(httpMethod)) {
-					response = new ReservationsGetHandler().handleRequest(request, context).withHeaders(headersForCORS);
-				}
-				break;
+            case "/reservations":
+                if ("POST".equalsIgnoreCase(httpMethod)) {
+                    response = new ReservationsPostHandler().handleRequest(request, context).withHeaders(headersForCORS);
+                } else if ("GET".equalsIgnoreCase(httpMethod)) {
+                    response = new ReservationsGetHandler().handleRequest(request, context).withHeaders(headersForCORS);
+                }
+                break;
 
-			default:
-				response = new APIGatewayProxyResponseEvent()
-						.withStatusCode(400)
-						.withBody("Invalid resource path or method.");
-				break;
-		}
+            default:
+                response = new APIGatewayProxyResponseEvent()
+                        .withStatusCode(400)
+                        .withBody("Invalid resource path or method.");
+                break;
+        }
 
-		return response != null ? response : new APIGatewayProxyResponseEvent()
-				.withStatusCode(400)
-				.withBody("Invalid request.");
-	}
-	private Map<String, String> initHeadersForCORS() {
-		return Map.of(
-				"Access-Control-Allow-Headers", "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
-				"Access-Control-Allow-Origin", "*",
-				"Access-Control-Allow-Methods", "*",
-				"Accept-Version", "*"
-		);
-	}
+        return response != null ? response : new APIGatewayProxyResponseEvent()
+                .withStatusCode(400)
+                .withBody("Invalid request.");
+    }
+
+    private Map<String, String> initHeadersForCORS() {
+        return Map.of(
+                "Access-Control-Allow-Headers", "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+                "Access-Control-Allow-Origin", "*",
+                "Access-Control-Allow-Methods", "*",
+                "Accept-Version", "*"
+        );
+    }
 }

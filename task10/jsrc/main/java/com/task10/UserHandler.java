@@ -14,6 +14,7 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.ChallengeNa
 import software.amazon.awssdk.services.cognitoidentityprovider.model.DeliveryMediumType;
 
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class UserHandler {
     private final String userPoolId = System.getenv("COGNITO_ID");
@@ -25,7 +26,7 @@ public class UserHandler {
     }
 
 
-    protected void confirmSignUp(String email, String password, LambdaLogger logger) {
+    protected void confirmSignUp(String email, String password) {
 
         AdminInitiateAuthResponse adminInitiateAuthResponse = signIn(email, password);
 
@@ -40,7 +41,6 @@ public class UserHandler {
                 "PASSWORD", password,
                 "NEW_PASSWORD", password
         );
-        logger.log("cognitoClient " + clientId.toString());
 
         AdminRespondToAuthChallengeResponse adminRespondToAuthChallengeResponse = cognitoClient.adminRespondToAuthChallenge(AdminRespondToAuthChallengeRequest.builder()
                 .challengeName(ChallengeNameType.NEW_PASSWORD_REQUIRED)
@@ -49,7 +49,6 @@ public class UserHandler {
                 .clientId(clientId)
                 .session(adminInitiateAuthResponse.session())
                 .build());
-//        logger.log("token " + adminInitiateAuthResponse.authenticationResult().idToken());
     }
 
     protected AdminCreateUserResponse signUp(Map<String,String> user) {
@@ -82,6 +81,17 @@ public class UserHandler {
                 .userPoolId(userPoolId)
                 .clientId(clientId)
                 .build());
+    }
+    protected boolean isValidPassword(String password) {
+        String passwordRegex = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[$%^*])[A-Za-z\\d$%^*]{12,}$";
+        Pattern pat = Pattern.compile(passwordRegex);
+        return pat.matcher(password).matches();
+    }
+
+    protected boolean isValidEmail(String email) {
+        String emailRegex = "^[a-zA-Z0-9._%±-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$";
+        Pattern pat = Pattern.compile(emailRegex);
+        return pat.matcher(email).matches();
     }
 
 }

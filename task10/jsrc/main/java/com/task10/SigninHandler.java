@@ -32,6 +32,17 @@ public class SigninHandler extends UserHandler implements RequestHandler<APIGate
             logger.log("SINGIN email " + email);
             logger.log("SINGIN password " + password);
 
+            if (!isValidEmail(email)) {
+                return new APIGatewayProxyResponseEvent()
+                        .withStatusCode(400)
+                        .withBody("Invalid email format.");
+            }
+            if (!isValidPassword(password)) {
+                return new APIGatewayProxyResponseEvent()
+                        .withStatusCode(400)
+                        .withBody("Invalid password format.");
+            }
+
             String idToken = signIn(email, password).authenticationResult().idToken();
 
             logger.log("SIGIN token " + idToken);

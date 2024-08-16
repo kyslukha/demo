@@ -36,25 +36,17 @@ public class SignupHandler extends UserHandler implements RequestHandler<APIGate
             String lastName = body.get("lastName").asText();
             String email = body.get("email").asText();
             String password = body.get("password").asText();
-            LambdaLogger logger = context.getLogger();
-            logger.log("email" + email);
-            logger.log("password " + password);
 
             if (!isValidEmail(email)) {
-                logger.log("invalid email or password");
                 return new APIGatewayProxyResponseEvent()
                         .withStatusCode(400)
                         .withBody("Invalid email format.");
             }
-            logger.log("valid email");
             if (!isValidPassword(password)) {
-                logger.log("invalid email or password");
                 return new APIGatewayProxyResponseEvent()
                         .withStatusCode(400)
                         .withBody("Invalid password format.");
             }
-
-            logger.log("valid password");
 
             Map<String, String> user = Map.of("email", email,
                     "password", password,
@@ -68,12 +60,7 @@ public class SignupHandler extends UserHandler implements RequestHandler<APIGate
                     .map(AttributeType::value)
                     .findAny()
                     .orElseThrow(() -> new RuntimeException("Sub not found."));
-
-            logger.log("userId " + userId);
-
-            confirmSignUp(email,password, logger);
-//            logger.log("token " + token)
-            logger.log("END");
+            confirmSignUp(email,password);
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(200)
                     .withBody("Sign-up process is successful");
@@ -83,20 +70,6 @@ public class SignupHandler extends UserHandler implements RequestHandler<APIGate
                     .withStatusCode(400)
                     .withBody("There was an error in the request.");
         }
-    }
-
-
-
-    private boolean isValidPassword(String password) {
-        String passwordRegex = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[$%^*])[A-Za-z\\d$%^*]{12,}$";
-        Pattern pat = Pattern.compile(passwordRegex);
-        return pat.matcher(password).matches();
-    }
-
-    private boolean isValidEmail(String email) {
-        String emailRegex = "^[a-zA-Z0-9._%±]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$";
-        Pattern pat = Pattern.compile(emailRegex);
-        return pat.matcher(email).matches();
     }
 }
 

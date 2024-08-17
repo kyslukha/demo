@@ -8,6 +8,8 @@ import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
+import com.amazonaws.services.dynamodbv2.model.ScanRequest;
+import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
@@ -20,92 +22,105 @@ import java.util.UUID;
 
 public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private final AmazonDynamoDB amazonDynamoDB = AmazonDynamoDBClientBuilder.defaultClient();
-    private final DynamoDB dynamoDB = new DynamoDB(AmazonDynamoDBClientBuilder.defaultClient());
-    private final String RESERVATIONS = System.getenv("NAME_TABLE_RESERVATIONS");
+    private final DynamoDB dynamoDB = new DynamoDB(amazonDynamoDB);
+    private static final String RESERVATION_TABLE = "Reservations";
+    private static final String TABLE_TABLE = "Tables";
 
     @Override
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent request, Context context) {
         try {
-            Map bodyMap = new ObjectMapper().readValue(request.getBody(), Map.class);
+            // Parsing the request body
+            Map<String, String> requestBody = new ObjectMapper().readValue(request.getBody(), Map.class);
 
-            Integer tableNumber = (Integer) bodyMap.get("tableNumber");
-            String clientName = (String) bodyMap.get("clientName");
-            String phoneNumber = (String) bodyMap.get("phoneNumber");
-            String date = (String) bodyMap.get("date");
-            String slotTimeStart = (String) bodyMap.get("slotTimeStart");
-            String slotTimeEnd = (String) bodyMap.get("slotTimeEnd");
+            String tableNumber = requestBody.get("tableNumber");
+            String clientName = requestBody.get("clientName");
+            String phoneNumber = requestBody.get("phoneNumber");
+            String date = requestBody.get("date");
+            String slotTimeStart = requestBody.get("slotTimeStart");
+            String slotTimeEnd = requestBody.get("slotTimeEnd");
 
-            if (clientName == null || clientName.isEmpty() ||
-                    phoneNumber == null || phoneNumber.isEmpty() ||
-                    date == null || date.isEmpty() ||
-                    slotTimeStart == null || slotTimeStart.isEmpty() ||
-                    slotTimeEnd == null || slotTimeEnd.isEmpty()) {
+            if (tableNumber == null || clientName == null || phoneNumber == null || date == null ||
+                    slotTimeStart == null || slotTimeEnd == null) {
                 return new APIGatewayProxyResponseEvent()
                         .withStatusCode(400)
-                        .withBody("Invalid data.");
+                        .withBody("{\"error\": \"Missing or invalid parameters\"}");
+            }
+
+            if (!tableExists(Integer.parseInt(tableNumber))) {
+                return new APIGatewayProxyResponseEvent()
+                        .withStatusCode(400)
+                        .withBody("{\"error\": \"Table does not exist\"}");
             }
 
             if (conflictingReservationExists(tableNumber, date, slotTimeStart, slotTimeEnd)) {
-                return new APIGatewayProxyResponseEvent().withStatusCode(400).withBody("Conflicting reservation found.");
+                return new APIGatewayProxyResponseEvent()
+                        .withStatusCode(400)
+                        .withBody("{\"error\": \"Reservation overlaps with an existing reservation\"}");
             }
 
             String reservationId = UUID.randomUUID().toString();
-            Item item = new Item().withPrimaryKey("id", reservationId)
-                    .withInt("tableNumber", tableNumber)
+            Item newReservation = new Item()
+                    .withPrimaryKey("id", reservationId)
+                    .withInt("tableNumber", Integer.parseInt(tableNumber))
                     .withString("clientName", clientName)
                     .withString("phoneNumber", phoneNumber)
                     .withString("date", date)
                     .withString("slotTimeStart", slotTimeStart)
                     .withString("slotTimeEnd", slotTimeEnd);
 
-            Table table = dynamoDB.getTable(RESERVATIONS);
-            table.putItem(item);
+            Table reservationTable = dynamoDB.getTable(RESERVATION_TABLE);
+            reservationTable.putItem(newReservation);
 
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(200)
-                    .withBody("{ \"reservationId\": \"" + reservationId + "\" }");
+                    .withBody("{\"reservationId\": \"" + reservationId + "\"}");
 
         } catch (Exception e) {
+            e.printStackTrace();
             return new APIGatewayProxyResponseEvent()
-                    .withStatusCode(400)
-                    .withBody("There was an error in the request.");
+                    .withStatusCode(500)
+                    .withBody("{\"error\": \"Internal server error: " + e.getMessage() + "\"}");
         }
     }
+    private boolean tableExists(int tableNumber) {
+        Map<String, String> expressionAttributeNames = new HashMap<>();
+        expressionAttributeNames.put("#num", "number");
 
-    private boolean conflictingReservationExists(Integer tableNumber, String date, String slotTimeStart, String slotTimeEnd) {
-        try {
-            Map<String, String> expressionAttributeNames = new HashMap<>();
-            expressionAttributeNames.put("#tableNumber", "tableNumber");
-            expressionAttributeNames.put("#date", "date");
-            expressionAttributeNames.put("#slotTimeStart", "slotTimeStart");
-            expressionAttributeNames.put("#slotTimeEnd", "slotTimeEnd");
+        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
+        expressionAttributeValues.put(":tableNumber", new AttributeValue().withN(String.valueOf(tableNumber)));
 
-            Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-            expressionAttributeValues.put(":tableNumber", new AttributeValue().withN(tableNumber.toString()));
-            expressionAttributeValues.put(":date", new AttributeValue().withS(date));
-            expressionAttributeValues.put(":slotTimeStart", new AttributeValue().withS(slotTimeStart));
-            expressionAttributeValues.put(":slotTimeEnd", new AttributeValue().withS(slotTimeEnd));
+        com.amazonaws.services.dynamodbv2.model.ScanRequest scanRequest = new ScanRequest()
+                .withTableName(TABLE_TABLE)
+                .withFilterExpression("#num = :tableNumber")
+                .withExpressionAttributeNames(expressionAttributeNames)
+                .withExpressionAttributeValues(expressionAttributeValues);
 
-            String filterExpression = "#slotTimeStart < :slotTimeEnd AND #slotTimeEnd > :slotTimeStart";
+        ScanResult scanResult = amazonDynamoDB.scan(scanRequest);
+        return !scanResult.getItems().isEmpty();
+    }
+    private boolean conflictingReservationExists(String tableNumber, String date, String slotTimeStart, String slotTimeEnd) {
+        Map<String, String> expressionAttributeNames = new HashMap<>();
+        expressionAttributeNames.put("#tableNumber", "tableNumber");
+        expressionAttributeNames.put("#date", "date");
+        expressionAttributeNames.put("#slotTimeStart", "slotTimeStart");
+        expressionAttributeNames.put("#slotTimeEnd", "slotTimeEnd");
 
-            QueryRequest queryRequest = new QueryRequest()
-                    .withTableName(RESERVATIONS)
-                    .withKeyConditionExpression("#tableNumber = :tableNumber AND #date = :date")
-                    .withFilterExpression(filterExpression)
-                    .withExpressionAttributeNames(expressionAttributeNames)
-                    .withExpressionAttributeValues(expressionAttributeValues);
+        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
+        expressionAttributeValues.put(":tableNumber", new AttributeValue().withS(tableNumber));
+        expressionAttributeValues.put(":date", new AttributeValue().withS(date));
+        expressionAttributeValues.put(":slotTimeStart", new AttributeValue().withS(slotTimeStart));
+        expressionAttributeValues.put(":slotTimeEnd", new AttributeValue().withS(slotTimeEnd));
 
-            QueryResult result = amazonDynamoDB.query(queryRequest);
+        String filterExpression = "#tableNumber = :tableNumber AND #date = :date AND " +
+                "(#slotTimeStart < :slotTimeEnd AND #slotTimeEnd > :slotTimeStart)";
 
-            // Log the result for debugging
-            System.out.println("Query result: " + result.getItems());
+        QueryRequest queryRequest = new QueryRequest()
+                .withTableName(RESERVATION_TABLE)
+                .withFilterExpression(filterExpression)
+                .withExpressionAttributeNames(expressionAttributeNames)
+                .withExpressionAttributeValues(expressionAttributeValues);
 
-            // Check if any items were returned
-            return !result.getItems().isEmpty();
-
-        } catch (Exception e) {
-            System.err.println("Error checking conflicting reservation: " + e.getMessage());
-            return true; // If there's an error, assume conflict to prevent double booking
-        }
+        QueryResult queryResult = amazonDynamoDB.query(queryRequest);
+        return !queryResult.getItems().isEmpty();
     }
 }

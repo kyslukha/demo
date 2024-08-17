@@ -30,14 +30,14 @@ public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRe
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent request, Context context) {
         try {
             // Parsing the request body
-            Map<String, String> requestBody = new ObjectMapper().readValue(request.getBody(), Map.class);
+            Map requestBody = new ObjectMapper().readValue(request.getBody(), Map.class);
 
-            String tableNumber = requestBody.get("tableNumber");
-            String clientName = requestBody.get("clientName");
-            String phoneNumber = requestBody.get("phoneNumber");
-            String date = requestBody.get("date");
-            String slotTimeStart = requestBody.get("slotTimeStart");
-            String slotTimeEnd = requestBody.get("slotTimeEnd");
+            Integer tableNumber = (Integer) requestBody.get("tableNumber");
+            String clientName = (String) requestBody.get("clientName");
+            String phoneNumber = (String) requestBody.get("phoneNumber");
+            String date = (String) requestBody.get("date");
+            String slotTimeStart = (String) requestBody.get("slotTimeStart");
+            String slotTimeEnd = (String) requestBody.get("slotTimeEnd");
 
             if (tableNumber == null || clientName == null || phoneNumber == null || date == null ||
                     slotTimeStart == null || slotTimeEnd == null) {
@@ -46,7 +46,7 @@ public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRe
                         .withBody("{\"error\": \"Missing or invalid parameters\"}");
             }
 
-            if (!tableExists(Integer.parseInt(tableNumber))) {
+            if (!tableExists(tableNumber)) {
                 return new APIGatewayProxyResponseEvent()
                         .withStatusCode(400)
                         .withBody("{\"error\": \"Table does not exist\"}");
@@ -61,7 +61,7 @@ public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRe
             String reservationId = UUID.randomUUID().toString();
             Item newReservation = new Item()
                     .withPrimaryKey("id", reservationId)
-                    .withInt("tableNumber", Integer.parseInt(tableNumber))
+                    .withInt("tableNumber", tableNumber)
                     .withString("clientName", clientName)
                     .withString("phoneNumber", phoneNumber)
                     .withString("date", date)
@@ -78,10 +78,11 @@ public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRe
         } catch (Exception e) {
             e.printStackTrace();
             return new APIGatewayProxyResponseEvent()
-                    .withStatusCode(500)
+                    .withStatusCode(400)
                     .withBody("{\"error\": \"Internal server error: " + e.getMessage() + "\"}");
         }
     }
+
     private boolean tableExists(int tableNumber) {
         Map<String, String> expressionAttributeNames = new HashMap<>();
         expressionAttributeNames.put("#num", "number");
@@ -98,7 +99,8 @@ public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRe
         ScanResult scanResult = amazonDynamoDB.scan(scanRequest);
         return !scanResult.getItems().isEmpty();
     }
-    private boolean conflictingReservationExists(String tableNumber, String date, String slotTimeStart, String slotTimeEnd) {
+
+    private boolean conflictingReservationExists(Integer tableNumber, String date, String slotTimeStart, String slotTimeEnd) {
         Map<String, String> expressionAttributeNames = new HashMap<>();
         expressionAttributeNames.put("#tableNumber", "tableNumber");
         expressionAttributeNames.put("#date", "date");
@@ -106,13 +108,14 @@ public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRe
         expressionAttributeNames.put("#slotTimeEnd", "slotTimeEnd");
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":tableNumber", new AttributeValue().withS(tableNumber));
+        expressionAttributeValues.put(":tableNumber", new AttributeValue().withN(tableNumber.toString()));
         expressionAttributeValues.put(":date", new AttributeValue().withS(date));
         expressionAttributeValues.put(":slotTimeStart", new AttributeValue().withS(slotTimeStart));
         expressionAttributeValues.put(":slotTimeEnd", new AttributeValue().withS(slotTimeEnd));
 
         String filterExpression = "#tableNumber = :tableNumber AND #date = :date AND " +
-                "(#slotTimeStart < :slotTimeEnd AND #slotTimeEnd > :slotTimeStart)";
+                "((#slotTimeStart < :slotTimeEnd AND :slotTimeStart < #slotTimeEnd) " +
+                "OR (#slotTimeStart > :slotTimeStart AND :slotTimeEnd > #slotTimeStart))";
 
         QueryRequest queryRequest = new QueryRequest()
                 .withTableName(RESERVATION_TABLE)
@@ -120,7 +123,8 @@ public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRe
                 .withExpressionAttributeNames(expressionAttributeNames)
                 .withExpressionAttributeValues(expressionAttributeValues);
 
-        QueryResult queryResult = amazonDynamoDB.query(queryRequest);
-        return !queryResult.getItems().isEmpty();
+        QueryResult result = amazonDynamoDB.query(queryRequest);
+
+        return !result.getItems().isEmpty();
     }
 }

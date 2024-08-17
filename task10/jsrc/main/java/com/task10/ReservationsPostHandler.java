@@ -18,7 +18,9 @@ import java.util.UUID;
 public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private final DynamoDB dynamoDB = new DynamoDB(AmazonDynamoDBClientBuilder.defaultClient());
 
-    private final String RESERVATIONS = System.getenv("NAME_TABLE_RESERVATIONS");
+//    private final String RESERVATIONS = System.getenv("NAME_TABLE_RESERVATIONS");
+    private final String RESERVATIONS = "cmtr-3ba132da-Reservations-test";
+
 
 
     @Override
@@ -47,11 +49,11 @@ public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRe
                         .withStatusCode(400)
                         .withBody("There was an error in the request.");
             }
-            if (!tableExists(tableNumberInt)) {
-                return new APIGatewayProxyResponseEvent()
-                        .withStatusCode(400)
-                        .withBody("There was an error in the request.");
-            }
+//            if (!tableExists(tableNumberInt)) {
+//                return new APIGatewayProxyResponseEvent()
+//                        .withStatusCode(400)
+//                        .withBody("There was an error in the request.");
+//            }
 //            if (conflictingReservationExists(tableNumberInt, dateStr, slotTimeStartStr, slotTimeEndStr)) {
 //                return new APIGatewayProxyResponseEvent()
 //                        .withStatusCode(400)

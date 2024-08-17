@@ -23,8 +23,8 @@ import java.util.UUID;
 public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private final AmazonDynamoDB amazonDynamoDB = AmazonDynamoDBClientBuilder.defaultClient();
     private final DynamoDB dynamoDB = new DynamoDB(amazonDynamoDB);
-    private static final String RESERVATION_TABLE = "Reservations";
-    private static final String TABLE_TABLE = "Tables";
+    private static final String RESERVATION_TABLE = System.getenv("NAME_TABLE_RESERVATIONS");
+    private static final String TABLE_TABLE = System.getenv("NAME_TABLE_TABLES");
 
     @Override
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent request, Context context) {

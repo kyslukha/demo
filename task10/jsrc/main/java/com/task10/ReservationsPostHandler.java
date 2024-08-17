@@ -21,8 +21,6 @@ public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRe
 //    private final String RESERVATIONS = System.getenv("NAME_TABLE_RESERVATIONS");
     private final String RESERVATIONS = "cmtr-3ba132da-Reservations-test";
 
-
-
     @Override
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent request, Context context) {
         try {

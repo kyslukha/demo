@@ -51,16 +51,16 @@ public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRe
             String slotTimeStartStr = (String) slotTimeStart;
             String slotTimeEndStr = (String) slotTimeEnd;
 
-//            if (!isValidInput(tableNumberInt, clientNameStr, phoneNumberStr, dateStr, slotTimeStartStr, slotTimeEndStr)) {
-//                return new APIGatewayProxyResponseEvent()
-//                        .withStatusCode(400)
-//                        .withBody("There was an error in the request1.");
-//            }
-//
+            if (!isValidInput(tableNumberInt, clientNameStr, phoneNumberStr, dateStr, slotTimeStartStr, slotTimeEndStr)) {
+                return new APIGatewayProxyResponseEvent()
+                        .withStatusCode(400)
+                        .withBody("There was an error in the request.");
+            }
+
 //            if (hasConflictingReservation(tableNumberInt, dateStr, slotTimeStartStr, slotTimeEndStr)) {
 //                return new APIGatewayProxyResponseEvent()
 //                        .withStatusCode(400)
-//                        .withBody("There was an error in the request2.");
+//                        .withBody("There was an error in the request.");
 //            }
 
 
@@ -91,29 +91,29 @@ public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRe
     }
 
     private boolean hasConflictingReservation(Integer tableNumberInt, String dateStr, String slotTimeStartStr, String slotTimeEndStr) {
-        Map<String, AttributeValue> expressionValues = new HashMap<>();
-        expressionValues.put(":tableNumber", AttributeValue.builder().n(String.valueOf(tableNumberInt)).build());
-        expressionValues.put(":date", AttributeValue.builder().s(dateStr).build());
-
-        QueryRequest queryRequest = QueryRequest.builder()
-                .tableName(RESERVATIONS)
-                .keyConditionExpression("tableNumber = :tableNumber and date = :date")
-                .expressionAttributeValues(expressionValues)
-                .build();
-
-        QueryResponse queryResponse = client.query(queryRequest);
-
-        LocalTime start = LocalTime.parse(slotTimeStartStr, DateTimeFormatter.ofPattern("HH:mm"));
-        LocalTime end = LocalTime.parse(slotTimeEndStr, DateTimeFormatter.ofPattern("HH:mm"));
-
-        for (Map<String, AttributeValue> item : queryResponse.items()) {
-            LocalTime existingStart = LocalTime.parse(item.get("slotTimeStart").s(), DateTimeFormatter.ofPattern("HH:mm"));
-            LocalTime existingEnd = LocalTime.parse(item.get("slotTimeEnd").s(), DateTimeFormatter.ofPattern("HH:mm"));
-
-            if (start.isBefore(existingEnd) && end.isAfter(existingStart)) {
-                return true;
-            }
-        }
+//        Map<String, AttributeValue> expressionValues = new HashMap<>();
+//        expressionValues.put(":tableNumber", AttributeValue.builder().n(String.valueOf(tableNumberInt)).build());
+//        expressionValues.put(":date", AttributeValue.builder().s(dateStr).build());
+//
+//        QueryRequest queryRequest = QueryRequest.builder()
+//                .tableName(RESERVATIONS)
+//                .keyConditionExpression("tableNumber = :tableNumber and date = :date")
+//                .expressionAttributeValues(expressionValues)
+//                .build();
+//
+//        QueryResponse queryResponse = client.query(queryRequest);
+//
+//        LocalTime start = LocalTime.parse(slotTimeStartStr, DateTimeFormatter.ofPattern("HH:mm"));
+//        LocalTime end = LocalTime.parse(slotTimeEndStr, DateTimeFormatter.ofPattern("HH:mm"));
+//
+//        for (Map<String, AttributeValue> item : queryResponse.items()) {
+//            LocalTime existingStart = LocalTime.parse(item.get("slotTimeStart").s(), DateTimeFormatter.ofPattern("HH:mm"));
+//            LocalTime existingEnd = LocalTime.parse(item.get("slotTimeEnd").s(), DateTimeFormatter.ofPattern("HH:mm"));
+//
+//            if (start.isBefore(existingEnd) && end.isAfter(existingStart)) {
+//                return true;
+//            }
+//        }
         return false;
     }
 

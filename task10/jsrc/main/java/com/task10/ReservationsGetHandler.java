@@ -38,11 +38,11 @@ public class ReservationsGetHandler implements RequestHandler<APIGatewayProxyReq
         for (Map<String, AttributeValue> item : scanResponse.items()) {
             Map<String, Object> table = new HashMap<>();
             table.put("tableNumber", Integer.parseInt(item.get("tableNumber").n()));
-            table.put("clientName", item.get("number"));
-            table.put("phoneNumber", item.get("phoneNumber"));
-            table.put("date", item.get("date"));
-            table.put("slotTimeStart", item.get("slotTimeStart"));
-            table.put("slotTimeEnd", item.get("slotTimeEnd"));
+            table.put("clientName", String.valueOf(item.get("number")));
+            table.put("phoneNumber", String.valueOf(item.get("phoneNumber")));
+            table.put("date", String.valueOf(item.get("date")));
+            table.put("slotTimeStart", String.valueOf(item.get("slotTimeStart")));
+            table.put("slotTimeEnd", String.valueOf(item.get("slotTimeEnd")));
             logger.log("create list of reservation");
             reservations.add(table);
         }
@@ -52,7 +52,8 @@ public class ReservationsGetHandler implements RequestHandler<APIGatewayProxyReq
         logger.log("create full map");
 
         try {
-            return new APIGatewayProxyResponseEvent().withStatusCode(200).withBody(new ObjectMapper().writeValueAsString(responseBody));
+            return new APIGatewayProxyResponseEvent().withStatusCode(200)
+                    .withBody(new ObjectMapper().writeValueAsString(responseBody));
         } catch (JsonProcessingException e) {
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(400)

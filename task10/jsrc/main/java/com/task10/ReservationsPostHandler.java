@@ -32,12 +32,19 @@ public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRe
             // Parsing the request body
             Map requestBody = new ObjectMapper().readValue(request.getBody(), Map.class);
 
-            Integer tableNumber = (Integer) requestBody.get("tableNumber");
-            String clientName = (String) requestBody.get("clientName");
-            String phoneNumber = (String) requestBody.get("phoneNumber");
-            String date = (String) requestBody.get("date");
-            String slotTimeStart = (String) requestBody.get("slotTimeStart");
-            String slotTimeEnd = (String) requestBody.get("slotTimeEnd");
+            Object tableNumberObj = requestBody.get("tableNumber");
+            Object clientNameObj = requestBody.get("clientName");
+            Object phoneNumberObj = requestBody.get("phoneNumber");
+            Object dateObj = requestBody.get("date");
+            Object slotTimeStartObj = requestBody.get("slotTimeStart");
+            Object slotTimeEndObj = requestBody.get("slotTimeEnd");
+
+            Integer tableNumber = (Integer) tableNumberObj;
+            String clientName = (String) clientNameObj;
+            String phoneNumber = (String) phoneNumberObj;
+            String date = (String) dateObj;
+            String slotTimeStart = (String) slotTimeStartObj;
+            String slotTimeEnd = (String) slotTimeEndObj;
 
             if (tableNumber == null || clientName == null || phoneNumber == null || date == null ||
                     slotTimeStart == null || slotTimeEnd == null) {

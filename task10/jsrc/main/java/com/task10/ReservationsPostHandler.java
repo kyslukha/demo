@@ -30,9 +30,6 @@ public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRe
     private final String RESERVATIONS = System.getenv("NAME_TABLE_RESERVATIONS");
 
 
-
-
-
     @Override
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent request, Context context) {
         try {
@@ -54,17 +51,17 @@ public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRe
             String slotTimeStartStr = (String) slotTimeStart;
             String slotTimeEndStr = (String) slotTimeEnd;
 
-            if (!isValidInput(tableNumberInt, clientNameStr, phoneNumberStr, dateStr, slotTimeStartStr, slotTimeEndStr)) {
-                return new APIGatewayProxyResponseEvent()
-                        .withStatusCode(400)
-                        .withBody("There was an error in the request.");
-            }
-
-            if (hasConflictingReservation(tableNumberInt, dateStr, slotTimeStartStr, slotTimeEndStr)) {
-                return new APIGatewayProxyResponseEvent()
-                        .withStatusCode(400)
-                        .withBody("There was an error in the request.");
-            }
+//            if (!isValidInput(tableNumberInt, clientNameStr, phoneNumberStr, dateStr, slotTimeStartStr, slotTimeEndStr)) {
+//                return new APIGatewayProxyResponseEvent()
+//                        .withStatusCode(400)
+//                        .withBody("There was an error in the request1.");
+//            }
+//
+//            if (hasConflictingReservation(tableNumberInt, dateStr, slotTimeStartStr, slotTimeEndStr)) {
+//                return new APIGatewayProxyResponseEvent()
+//                        .withStatusCode(400)
+//                        .withBody("There was an error in the request2.");
+//            }
 
 
             String reservationId = UUID.randomUUID().toString();

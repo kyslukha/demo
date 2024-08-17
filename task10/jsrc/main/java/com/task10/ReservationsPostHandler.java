@@ -46,9 +46,7 @@ public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRe
             }
 
             if (conflictingReservationExists(tableNumber, date, slotTimeStart, slotTimeEnd)) {
-                return new APIGatewayProxyResponseEvent()
-                        .withStatusCode(400)
-                        .withBody("conflict reservation.");
+                return new APIGatewayProxyResponseEvent().withStatusCode(400).withBody("Conflicting reservation found.");
             }
 
             String reservationId = UUID.randomUUID().toString();
@@ -76,8 +74,6 @@ public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRe
 
     private boolean conflictingReservationExists(Integer tableNumber, String date, String slotTimeStart, String slotTimeEnd) {
         try {
-
-
             Map<String, String> expressionAttributeNames = new HashMap<>();
             expressionAttributeNames.put("#tableNumber", "tableNumber");
             expressionAttributeNames.put("#date", "date");
@@ -88,8 +84,7 @@ public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRe
             expressionAttributeValues.put(":slotTimeStart", new AttributeValue().withS(slotTimeStart));
             expressionAttributeValues.put(":slotTimeEnd", new AttributeValue().withS(slotTimeEnd));
 
-            // Filter to find any overlapping reservations
-            String filterExpression = "#tableNumber = :tableNumber AND #date = :date AND ((slotTimeStart < :slotTimeEnd AND slotTimeEnd > :slotTimeStart))";
+            String filterExpression = "slotTimeStart < :slotTimeEnd AND slotTimeEnd > :slotTimeStart";
 
             QueryRequest queryRequest = new QueryRequest()
                     .withTableName(RESERVATIONS)
@@ -100,7 +95,10 @@ public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRe
 
             QueryResult result = amazonDynamoDB.query(queryRequest);
 
+            System.out.println("Query result: " + result.getItems());
+
             return !result.getItems().isEmpty();
+
         } catch (Exception e) {
             System.err.println("Error checking conflicting reservation: " + e.getMessage());
             return true;

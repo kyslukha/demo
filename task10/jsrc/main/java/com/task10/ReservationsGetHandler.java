@@ -32,19 +32,24 @@ public class ReservationsGetHandler implements RequestHandler<APIGatewayProxyReq
     @Override
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent request, Context context) {
         ScanResponse scanResponse = client.scan(ScanRequest.builder().tableName(RESERVATIONS).build());
-        List<Map<String, Object>> tables = new ArrayList<>();
+        LambdaLogger logger = context.getLogger();
+        logger.log("WELCOME TO RESERVATIONS GET");
+        List<Map<String, Object>> reservations = new ArrayList<>();
         for (Map<String, AttributeValue> item : scanResponse.items()) {
             Map<String, Object> table = new HashMap<>();
             table.put("tableNumber", Integer.parseInt(item.get("tableNumber").n()));
-            table.put("clientName", item.get("number").toString());
-            table.put("phoneNumber", item.get("phoneNumber").toString());
-            table.put("date", item.get("date").toString());
-            table.put("slotTimeStart", item.get("slotTimeStart").toString());
-            table.put("slotTimeEnd", item.get("slotTimeEnd").toString());
-            tables.add(table);
+            table.put("clientName", item.get("number"));
+            table.put("phoneNumber", item.get("phoneNumber"));
+            table.put("date", item.get("date"));
+            table.put("slotTimeStart", item.get("slotTimeStart"));
+            table.put("slotTimeEnd", item.get("slotTimeEnd"));
+            logger.log("create list of reservation");
+            reservations.add(table);
         }
+        logger.log("create list of maps");
 
-        Map<String, List<Map<String, Object>>> responseBody = Map.of("reservations", tables);
+        Map<String, List<Map<String, Object>>> responseBody = Map.of("reservations", reservations);
+        logger.log("create full map");
 
         try {
             return new APIGatewayProxyResponseEvent().withStatusCode(200).withBody(new ObjectMapper().writeValueAsString(responseBody));

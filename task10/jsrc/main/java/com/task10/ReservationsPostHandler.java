@@ -9,15 +9,28 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
+import software.amazon.awssdk.services.dynamodb.model.QueryResponse;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
+    private final DynamoDbClient client = DynamoDbClient.builder().build();
+
     private final DynamoDB dynamoDB = new DynamoDB(AmazonDynamoDBClientBuilder.defaultClient());
 
     private final String RESERVATIONS = System.getenv("NAME_TABLE_RESERVATIONS");
+
+    private static final int MAX_TABLE_NUMBER = 10;
+
 
 
     @Override
@@ -40,6 +53,18 @@ public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRe
             String dateStr = (String) date;
             String slotTimeStartStr = (String) slotTimeStart;
             String slotTimeEndStr = (String) slotTimeEnd;
+
+            if (!isValidInput(tableNumberInt, clientNameStr, phoneNumberStr, dateStr, slotTimeStartStr, slotTimeEndStr)) {
+                return new APIGatewayProxyResponseEvent()
+                        .withStatusCode(400)
+                        .withBody("There was an error in the request.");
+            }
+
+            if (hasConflictingReservation(tableNumberInt, dateStr, slotTimeStartStr, slotTimeEndStr)) {
+                return new APIGatewayProxyResponseEvent()
+                        .withStatusCode(400)
+                        .withBody("There was an error in the request.");
+            }
 
 
             String reservationId = UUID.randomUUID().toString();
@@ -66,6 +91,53 @@ public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRe
                     .withStatusCode(400)
                     .withBody("There was an error in the request.");
         }
+    }
+
+    private boolean hasConflictingReservation(Integer tableNumberInt, String dateStr, String slotTimeStartStr, String slotTimeEndStr) {
+        Map<String, AttributeValue> expressionValues = new HashMap<>();
+        expressionValues.put(":tableNumber", AttributeValue.builder().n(String.valueOf(tableNumberInt)).build());
+        expressionValues.put(":date", AttributeValue.builder().s(dateStr).build());
+
+        QueryRequest queryRequest = QueryRequest.builder()
+                .tableName(RESERVATIONS)
+                .keyConditionExpression("tableNumber = :tableNumber and date = :date")
+                .expressionAttributeValues(expressionValues)
+                .build();
+
+        QueryResponse queryResponse = client.query(queryRequest);
+
+        LocalTime start = LocalTime.parse(slotTimeStartStr, DateTimeFormatter.ofPattern("HH:mm"));
+        LocalTime end = LocalTime.parse(slotTimeEndStr, DateTimeFormatter.ofPattern("HH:mm"));
+
+        for (Map<String, AttributeValue> item : queryResponse.items()) {
+            LocalTime existingStart = LocalTime.parse(item.get("slotTimeStart").s(), DateTimeFormatter.ofPattern("HH:mm"));
+            LocalTime existingEnd = LocalTime.parse(item.get("slotTimeEnd").s(), DateTimeFormatter.ofPattern("HH:mm"));
+
+            if (start.isBefore(existingEnd) && end.isAfter(existingStart)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    private boolean isValidInput(Integer tableNumberInt, String clientNameStr, String phoneNumberStr, String dateStr, String slotTimeStartStr, String slotTimeEndStr) {
+        if (tableNumberInt < 1 || tableNumberInt > MAX_TABLE_NUMBER) return false;
+
+        if (clientNameStr == null || clientNameStr.isEmpty() || phoneNumberStr == null || phoneNumberStr.isEmpty()) return false;
+
+        try {
+            LocalDate.parse(dateStr, DateTimeFormatter.ISO_LOCAL_DATE);
+        } catch (Exception e) {
+            return false;
+        }
+        try {
+            LocalTime.parse(slotTimeStartStr, DateTimeFormatter.ofPattern("HH:mm"));
+            LocalTime.parse(slotTimeEndStr, DateTimeFormatter.ofPattern("HH:mm"));
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
     }
 
 }

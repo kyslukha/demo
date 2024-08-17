@@ -38,11 +38,11 @@ public class ReservationsGetHandler implements RequestHandler<APIGatewayProxyReq
         for (Map<String, AttributeValue> item : scanResponse.items()) {
             Map<String, Object> table = new HashMap<>();
             table.put("tableNumber", Integer.parseInt(item.get("tableNumber").n()));
-            table.put("clientName", String.valueOf(item.get("number")));
-            table.put("phoneNumber", String.valueOf(item.get("phoneNumber")));
-            table.put("date", String.valueOf(item.get("date")));
-            table.put("slotTimeStart", String.valueOf(item.get("slotTimeStart")));
-            table.put("slotTimeEnd", String.valueOf(item.get("slotTimeEnd")));
+            table.put("clientName", (item.get("clientName").s()));
+            table.put("phoneNumber", String.valueOf(item.get("phoneNumber").s()));
+            table.put("date", String.valueOf(item.get("date").s()));
+            table.put("slotTimeStart", String.valueOf(item.get("slotTimeStart").s()));
+            table.put("slotTimeEnd", String.valueOf(item.get("slotTimeEnd").s()));
             logger.log("create list of reservation");
             reservations.add(table);
         }

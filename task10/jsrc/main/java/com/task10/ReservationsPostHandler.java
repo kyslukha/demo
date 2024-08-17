@@ -149,14 +149,14 @@ logger.log("begin conflict reservation method");
                 "OR (#slotTimeStart > :slotTimeStart AND :slotTimeEnd > #slotTimeStart))";
         logger.log(" create filter " + filterExpression);
 
-        QueryRequest queryRequest = new QueryRequest()
+        ScanRequest scanRequest = new ScanRequest()
                 .withTableName(RESERVATION_TABLE)
                 .withFilterExpression(filterExpression)
                 .withExpressionAttributeNames(expressionAttributeNames)
                 .withExpressionAttributeValues(expressionAttributeValues);
         logger.log("request");
 
-        QueryResult result = amazonDynamoDB.query(queryRequest);
+        ScanResult result = amazonDynamoDB.scan(scanRequest);
         logger.log("result" + !result.getItems().isEmpty());
 
         return !result.getItems().isEmpty();

@@ -29,7 +29,7 @@ public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRe
 
     private final String RESERVATIONS = System.getenv("NAME_TABLE_RESERVATIONS");
 
-    private static final int MAX_TABLE_NUMBER = 10;
+
 
 
 
@@ -122,7 +122,7 @@ public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRe
 
 
     private boolean isValidInput(Integer tableNumberInt, String clientNameStr, String phoneNumberStr, String dateStr, String slotTimeStartStr, String slotTimeEndStr) {
-        if (tableNumberInt < 1 || tableNumberInt > MAX_TABLE_NUMBER) return false;
+        if (tableNumberInt < 1) return false;
 
         if (clientNameStr == null || clientNameStr.isEmpty() || phoneNumberStr == null || phoneNumberStr.isEmpty()) return false;
 

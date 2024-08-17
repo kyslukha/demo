@@ -77,6 +77,8 @@ public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRe
             Map<String, String> expressionAttributeNames = new HashMap<>();
             expressionAttributeNames.put("#tableNumber", "tableNumber");
             expressionAttributeNames.put("#date", "date");
+            expressionAttributeNames.put("#slotTimeStart", "slotTimeStart");
+            expressionAttributeNames.put("#slotTimeEnd", "slotTimeEnd");
 
             Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
             expressionAttributeValues.put(":tableNumber", new AttributeValue().withN(tableNumber.toString()));
@@ -84,7 +86,7 @@ public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRe
             expressionAttributeValues.put(":slotTimeStart", new AttributeValue().withS(slotTimeStart));
             expressionAttributeValues.put(":slotTimeEnd", new AttributeValue().withS(slotTimeEnd));
 
-            String filterExpression = "slotTimeStart < :slotTimeEnd AND slotTimeEnd > :slotTimeStart";
+            String filterExpression = "#slotTimeStart < :slotTimeEnd AND #slotTimeEnd > :slotTimeStart";
 
             QueryRequest queryRequest = new QueryRequest()
                     .withTableName(RESERVATIONS)
@@ -95,13 +97,15 @@ public class ReservationsPostHandler implements RequestHandler<APIGatewayProxyRe
 
             QueryResult result = amazonDynamoDB.query(queryRequest);
 
+            // Log the result for debugging
             System.out.println("Query result: " + result.getItems());
 
+            // Check if any items were returned
             return !result.getItems().isEmpty();
 
         } catch (Exception e) {
             System.err.println("Error checking conflicting reservation: " + e.getMessage());
-            return true;
+            return true; // If there's an error, assume conflict to prevent double booking
         }
     }
 }

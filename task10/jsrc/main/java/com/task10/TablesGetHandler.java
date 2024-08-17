@@ -20,7 +20,6 @@ import java.util.Map;
 
 public class TablesGetHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
-    private final DynamoDB dynamoDB = new DynamoDB(AmazonDynamoDBClientBuilder.defaultClient());
     private final DynamoDbClient client = DynamoDbClient.builder().build();
 
 
